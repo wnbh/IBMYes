@@ -17,23 +17,26 @@ jobs:
 
     - name: Init
       run: |
-        wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo apt-key add -
-        echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
-        sudo apt-get update
-        sudo apt-get install cf-cli
+        chmod -R 777 ./IBM_Cloud_CLI/
     - name: Login IBM Cloud
       env:
         IBM_ACCOUNT: ${{ secrets.IBM_ACCOUNT }}
-        IBM_PASSWORD: ${{ secrets.IBM_PASSWORD }}
+        REGION_NUM: ${{ secrets.REGION_NUM }}
       run: |
-        cf login -a https://api.us-south.cf.cloud.ibm.com -u $IBM_ACCOUNT << EOF
-        $IBM_PASSWORD
+        ./IBM_Cloud_CLI/ibmcloud login <<EOF
+        $IBM_ACCOUNT
+        $REGION_NUM
+        no
         EOF
-    - name: Get IBM Cloud Apps
+    - name: Target IBM Cloud
+      env:
+        RESOURSE_ID: ${{ secrets.RESOURSE_ID }}
       run: |
-        cf a
+        ./IBM_Cloud_CLI/ibmcloud target -g "$RESOURSE_ID"
+        ./IBM_Cloud_CLI/ibmcloud target --cf
+        ./IBM_Cloud_CLI/ibmcloud cf install -v 6.51.0
     - name: Restart IBM Cloud
       env:
         IBM_APP_NAME: ${{ secrets.IBM_APP_NAME }}
       run: |
-        cf restart $IBM_APP_NAME
+        ./IBM_Cloud_CLI/ibmcloud cf restart "$IBM_APP_NAME"
